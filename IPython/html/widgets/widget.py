@@ -343,6 +343,20 @@ class Widget(LoggingConfigurable):
                         "custom_content": content})
 
 
+    def set_snapshot(self, snapshot):
+        """Sets the static pre-computed widget data for the currently executing
+        cell.
+
+        Parameters
+        ----------
+        snapshot : dict
+            Precomputed widget state snapshot.
+        """
+        if self._comm is not None:
+            self._comm.send({"method": "set_snapshot",
+                            "snapshot": snapshot})
+
+
     def on_msg(self, callback, remove=False):
         """Register a callback for when a custom msg is recieved from the front-end
 
