@@ -54,19 +54,10 @@ class StaticWidgetManager(object):
                 capture_widgets.append(widget)
                 self._hook_send(widget)
                 
-                if isinstance(widget, widgets.IntRangeWidget) and \
-                (call[1] == "IntSliderView" or call[1] == "IntTextView"):
-                    capture_values[widget] = range(widget.min, widget.max + widget.step, widget.step)
-                    original_values[widget] = widget.value
-                elif isinstance(widget, widgets.FloatRangeWidget) and \
-                (call[1] == "FloatSliderView" or call[1] == "FloatTextView"):
-                    capture_values[widget] = [x * widget.step + widget.min for x in range(0, int((widget.max - widget.min) / widget.step))]
-                    original_values[widget] = widget.value
-                elif isinstance(widget, widgets.SelectionWidget):
-                    capture_values[widget] = widget.values
-                    original_values[widget] = widget.value
-                elif isinstance(widget, widgets.BoolWidget):
-                    capture_values[widget] = [True, False]
+                # Try to get the bounded values for the widget.
+                bounded_values = self._get_bounded_values(widget, call[1])
+                if bounded_values is not None:
+                    capture_values[widget] = bounded_values
                     original_values[widget] = widget.value
             
         if len(capture_widgets) > 0:
@@ -118,7 +109,22 @@ class StaticWidgetManager(object):
             for (widget, value) in original_values.items():
                 widget.value = value
 
+
+    def _get_bounded_values(self, widget, view_name):
+        if isinstance(widget, widgets.IntRangeWidget) and \
+        (view_name == "IntSliderView" or view_name == "IntTextView"):
+            return range(widget.min, widget.max + widget.step, widget.step)
+        elif isinstance(widget, widgets.FloatRangeWidget) and \
+        (view_name == "FloatSliderView" or view_name == "FloatTextView"):
+            return [x * widget.step + widget.min for x in range(0, int((widget.max - widget.min) / widget.step))]
+        elif isinstance(widget, widgets.SelectionWidget):
+            return widget.values
+        elif isinstance(widget, widgets.BoolWidget):
+            return [True, False]
+        else:
+            return None
     
+
     def _each_value(self, widget_values, capture_widgets):
         (widget, values) = widget_values.popitem()
         results = []
