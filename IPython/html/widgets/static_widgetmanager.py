@@ -20,17 +20,61 @@ import copy
 import IPython
 from IPython.html import widgets
 from IPython.utils.capture import capture_output
-
+from IPyhton.core.prefilter import PrefilterChecker
 
 #-----------------------------------------------------------------------------
 # Classes
 #-----------------------------------------------------------------------------
+class CellExecutionEvents(PrefilterChecker):
+
+    def __init__(self, ipython):
+        PrefilterChecker.__init__(self, shell=ipython.prefilter_manager.shell, 
+            prefilter_manager=ipython.prefilter_manager, 
+            parent=ipython.prefilter_manager)
+        self.is_running = False
+        self._ipython = ipython
+        self._ipython.register_post_execute(self._handle_cell_stop)
+        self.is_disposed = False
+        self._start_callback = None
+        self._stop_callback = None
+        
+    def __del__(self):
+        self.dispose()
+        
+    def dispose(self):
+        if not self.is_disposed:
+            del _ipython._post_execute[self._handle_cell_stop]
+            self.is_disposed = True
+            self._handle_cell_stop()
+            self.prefilter_manager.unregister_checker(self)
+
+    def check(self, line_info):
+        """Called when a line is executed in a cell."""
+        if not self._is_running:
+            self.is_running = True
+            if self._start_callback is not None and callable(self._start_callback):
+                self._start_callback()
+
+    def _handle_cell_stop(self):
+        if self._is_running:
+            self.is_running = False
+            if self._stop_callback is not None and callable(self._stop_callback):
+                self._stop_callback()
+
+    def on_start(self, callback):
+        self._start_callback = callback
+
+    def on_stop(self, callback):
+        self._stop_callback = callback
+
+
 class StaticWidgetManager(object):
     
     def __init__(self):
         self._sent_messages = {}
-        self._ipython = get_ipython()
-        self._ipython.register_post_execute(self._handle_cell_executed)
+        self._cell_events = CellExecutionEvents(get_ipython())
+        self._cell_events.on_start(self._handle_cell_start)
+        self._cell_events.on_stop(self._handle_cell_stop)
         self.is_disposed = False
         
     def __del__(self):
@@ -38,8 +82,14 @@ class StaticWidgetManager(object):
         
     def dispose(self):
         if not self.is_disposed:
-            del _ipython._post_execute[self._handle_cell_executed]
+            self._cell_events.dispose()
             self.is_disposed = True
+
+    def _handle_cell_start():
+        pass
+
+    def _handle_cell_stop():
+        pass
 
     def capture(self):
         if self.is_disposed:
