@@ -352,9 +352,8 @@ class Widget(LoggingConfigurable):
         snapshot : dict
             Precomputed widget state snapshot.
         """
-        if self._comm is not None:
-            self._comm.send({"method": "set_snapshot",
-                            "snapshot": snapshot})
+        self._send({"method": "set_snapshot",
+                        "snapshot": snapshot})
 
 
     def on_msg(self, callback, remove=False):
