@@ -75,6 +75,8 @@ class StaticWidgetManager(object):
         self._cell_events = CellExecutionEvents(get_ipython())
         self._cell_events.on_start(self._handle_cell_start)
         self._cell_events.on_stop(self._handle_cell_stop)
+
+        Widget.on_widget_constructed(self._handle_widget_constructed)
         self.is_disposed = False
         
     def __del__(self):
@@ -82,13 +84,17 @@ class StaticWidgetManager(object):
         
     def dispose(self):
         if not self.is_disposed:
+            Widget.on_widget_constructed(None)
             self._cell_events.dispose()
             self.is_disposed = True
 
-    def _handle_cell_start():
+    def _handle_widget_constructed(self, widget):
         pass
 
-    def _handle_cell_stop():
+    def _handle_cell_start(self):
+        pass
+
+    def _handle_cell_stop(self):
         pass
 
     def capture(self):
