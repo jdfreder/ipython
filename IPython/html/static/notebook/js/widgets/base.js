@@ -49,16 +49,7 @@ function(widget_manager, underscore, backbone){
 
         send: function (content, cell) {
             if (this._has_comm()) {
-                // Used the last modified view as the sender of the message.  This
-                // will insure that any python code triggered by the sent message
-                // can create and display widgets and output.
-                if (cell === undefined) {
-                    if (this.last_modified_view !== undefined && 
-                        this.last_modified_view.cell !== undefined) {
-                        cell = this.last_modified_view.cell;
-                    }
-                }
-                var callbacks = this._make_callbacks(cell);
+                var callbacks = this._make_callbacks();
                 var data = {method: 'custom', custom_content: content};
                 
                 this.comm.send(data, callbacks);
@@ -122,17 +113,9 @@ function(widget_manager, underscore, backbone){
             var method = msg.content.data.method;
             switch (method) {
                 case 'display':
-
-                    // Try to get the cell.
-                    var cell = this._get_msg_cell(msg.parent_header.msg_id);
-                    if (cell === null) {
-                        console.log("Could not determine where the display" + 
-                            " message was from.  Widget will not be displayed");
-                    } else {
-                        this.create_views(msg.content.data.view_name, 
+                    this.create_views(msg.content.data.view_name, 
                         msg.content.data.parent,
-                        cell);
-                    }
+                        msg.parent_header.msg_id);
                     break;
                 case 'update':
                     this.apply_update(msg.content.data.state);
@@ -194,8 +177,7 @@ function(widget_manager, underscore, backbone){
                     // throttled.
                     if (this.msg_buffer !== null &&
                         this.msg_throttle == this.pending_msgs) {
-
-                        var callbacks = this._make_callbacks(cell);
+                        var callbacks = this._make_callbacks();
                         var data = {method: 'backbone', sync_method: 'update', sync_data: this.msg_buffer};
                         this.comm.send(data, callbacks);   
                         this.msg_buffer = null;
@@ -246,14 +228,8 @@ function(widget_manager, underscore, backbone){
                             }
                         }
 
-                        var data = {method: 'backbone', sync_method: method, sync_data: send_json};
-
-                        var cell = null;
-                        if (this.last_modified_view !== undefined && this.last_modified_view !== null) {
-                            cell = this.last_modified_view.cell;    
-                        }
-                        
-                        var callbacks = this._make_callbacks(cell);
+                        var data = {method: 'backbone', sync_method: method, sync_data: send_json};                       
+                        var callbacks = this._make_callbacks();
                         this.comm.send(data, callbacks);    
                         this.pending_msgs++;
                     }
@@ -297,44 +273,51 @@ function(widget_manager, underscore, backbone){
 
 
         // Create view that represents the model.
-        create_views: function (view_name, parent_id, cell) {
+        create_views: function (view_name, parent_id, msg_id) {
             var new_views = [];
             var view;
+            
+            var cell = this._get_msg_cell(msg_id);
+            if (cell === null) {
+                console.log("Could not determine where the display" + 
+                    " message was from.  Widget will not be displayed");
+            } else {
 
-            // Try creating and adding the view to it's parent.
-            var displayed = false;
-            if (parent_id !== undefined) {
-                var parent_model = this.widget_manager.get_model(parent_id);
-                if (parent_model !== null) {
-                    var parent_views = parent_model.views; 
-                    for (var parent_view_index in parent_views) {
-                        var parent_view = parent_views[parent_view_index];
-                        if (parent_view.cell === cell) {
-                            if (parent_view.display_child !== undefined) {
-                                view = this._create_view(view_name, cell);
-                                if (view !== null) {
-                                    new_views.push(view);
-                                    parent_view.display_child(view);
-                                    displayed = true;
-                                    this._handle_view_created(view);
-                                }
-                            }    
+                // Try creating and adding the view to it's parent.
+                var displayed = false;
+                if (parent_id !== undefined) {
+                    var parent_model = this.widget_manager.get_model(parent_id);
+                    if (parent_model !== null) {
+                        var parent_views = parent_model.views; 
+                        for (var parent_view_index in parent_views) {
+                            var parent_view = parent_views[parent_view_index];
+                            if (parent_view.cell === cell) {
+                                if (parent_view.display_child !== undefined) {
+                                    view = this._create_view(view_name, cell);
+                                    if (view !== null) {
+                                        new_views.push(view);
+                                        parent_view.display_child(view);
+                                        displayed = true;
+                                        this._handle_view_created(view);
+                                    }
+                                }    
+                            }
                         }
                     }
                 }
-            }
 
-            // If no parent view is defined or exists.  Add the view's 
-            // element to cell's widget div.
-            if (!displayed) {
-                view = this._create_view(view_name, cell);
-                if (view !== null) {
-                    new_views.push(view);
+                // If no parent view is defined or exists.  Add the view's 
+                // element to cell's widget div.
+                if (!displayed) {
+                    view = this._create_view(view_name, cell);
+                    if (view !== null) {
+                        new_views.push(view);
 
-                    if (cell.widget_subarea !== undefined && cell.widget_subarea !== null) {
-                        cell.widget_area.show();
-                        cell.widget_subarea.append(view.$el);
-                        this._handle_view_created(view);
+                        if (cell.widget_subarea !== undefined && cell.widget_subarea !== null) {
+                            cell.widget_area.show();
+                            cell.widget_subarea.append(view.$el);
+                            this._handle_view_created(view);
+                        }
                     }
                 }
             }
@@ -390,13 +373,24 @@ function(widget_manager, underscore, backbone){
 
 
         // Build a callback dict.
-        _make_callbacks: function (cell) {
+        _make_callbacks: function () {
             var callbacks = {};
+
+            // Used the last modified view as the sender of the message.  This
+            // will insure that any python code triggered by the sent message
+            // can create and display widgets and output.
+            var cell = null;
+            if (this.last_modified_view !== undefined && 
+                this.last_modified_view.cell !== undefined) {
+                cell = this.last_modified_view.cell;
+            }
+
             if (cell !== null) {
                 
                 // Try to get output handlers
                 var handle_output = null;
                 var handle_clear_output = null;
+
                 if (cell.output_area !== undefined && cell.output_area !== null) {
                     handle_output = $.proxy(cell.output_area.handle_output, cell.output_area);
                     handle_clear_output = $.proxy(cell.output_area.handle_clear_output, cell.output_area);
