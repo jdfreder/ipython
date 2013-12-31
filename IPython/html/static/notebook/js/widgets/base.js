@@ -57,11 +57,6 @@ function(widget_manager, underscore, backbone){
         },
 
 
-        on_view_created: function (callback) {
-            this._view_created_callback = callback;
-        },
-
-
         on_close: function (callback) {
             this._close_callback = callback;
         },
@@ -243,13 +238,7 @@ function(widget_manager, underscore, backbone){
 
 
         _handle_view_created: function (view) {
-            if (this._view_created_callback) {
-                try {
-                    this._view_created_callback(view);
-                } catch (e) {
-                    console.log("Exception in widget model view displayed callback", e, view, this);
-                }
-            }
+            this.trigger('view_created', view);
         },
 
 
@@ -276,7 +265,7 @@ function(widget_manager, underscore, backbone){
         create_views: function (view_name, parent_id, msg_id) {
             var new_views = [];
             var view;
-            
+
             var cell = this._get_msg_cell(msg_id);
             if (cell === null) {
                 console.log("Could not determine where the display" + 
