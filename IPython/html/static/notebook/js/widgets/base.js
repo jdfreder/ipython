@@ -56,11 +56,6 @@ function(widget_manager, underscore, backbone){
         },
 
 
-        on_close: function (callback) {
-            this._close_callback = callback;
-        },
-
-
         _handle_custom_msg: function (content) {
             this.trigger('msg', content);
         },
@@ -313,13 +308,7 @@ function(widget_manager, underscore, backbone){
 
                     // Close the comm if there are no views left.
                     if (that.views.length() === 0) {
-                        if (that._close_callback) {
-                            try {
-                                that._close_callback(that);
-                            } catch (e) {
-                                console.log("Exception in widget model close callback", e, that);
-                            }
-                        }
+                        that.trigger('close', that);
 
                         if (that._has_comm()) {
                             that.comm.close();
