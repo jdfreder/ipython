@@ -78,7 +78,7 @@ class StaticWidgetManager(object):
 
         Widget.on_widget_constructed(self._handle_widget_constructed)
         self.is_disposed = False
-        
+
     def __del__(self):
         self.dispose()
         
@@ -89,37 +89,39 @@ class StaticWidgetManager(object):
             self.is_disposed = True
 
     def _handle_widget_constructed(self, widget):
-        pass
+        def _handle_display(**kwargs):
+            self._handle_widget_displayed(widget, **kwargs)
+        widget.on_displayed(**kwargs)
 
-    def _handle_cell_start(self):
-        pass
-
-    def _handle_cell_stop(self):
-        pass
-
-    def capture(self):
-        if self.is_disposed:
-            raise Exception('Object disposed')
-            
-        capture_widgets = []
-        original_values = {}
-        capture_values = {}
-        for call in widgets.Widget.display_calls:
-            widget = call[0]
-            if not widget in capture_widgets:
-                capture_widgets.append(widget)
+    def _handle_widget_displayed(self, widget, **kwargs):
+        if kwargs.get('capture', False):
+            if widget not in self._capture_widgets:
+                self._capture_widgets.append(widget)
                 self._hook_send(widget)
                 
                 # Try to get the bounded values for the widget.
                 bounded_values = self._get_bounded_values(widget, call[1])
                 if bounded_values is not None:
-                    capture_values[widget] = bounded_values
-                    original_values[widget] = widget.value
-            
-        if len(capture_widgets) > 0:
+                    self.capture_values[widget] = bounded_values
+                    self.original_values[widget] = widget.value
+
+    def _handle_cell_start(self):
+        self.capture_widgets = [] # Widgets that are being captured statically.
+        self.original_values = {} # Original `value`s of the captured widget(s).
+        self.capture_values = {} # Dictionary of widget ids and lists of valid values to use.
+        self.sent_msgs = [] # List of captured widget messages.  Chronologically ordered.
+
+    def _handle_cell_stop(self):
+        if len(self.capture_widgets) > 0:
+            # Read current messages, save.
+            initial_messages = self.sent_msgs
+            self.sent_msgs = []
+
+            # Hook output.
+            frames = []
             with capture_output() as io:
                 self._captured_io = io
-
+                # Hook clear output.
                 original_clear_output = self._ipython.display_pub.clear_output
                 def handle_clear_output(wait=False):
                     self._captured_io._stdout.truncate(0)
@@ -128,43 +130,50 @@ class StaticWidgetManager(object):
                     self._captured_io._stderr.seek(0)
                     original_clear_output(wait=wait)
                 self._ipython.display_pub.clear_output = handle_clear_output
-                
-                # Build the static display call list.
-                static_display_calls = []
-                for call in widgets.Widget.display_calls:
-                    display_call = []
-                    display_call.append(hex(id(call[0]))) # unique id
-                    display_call.append(call[0].target_name) # model name
-                    display_call.append(call[1]) # view name
-                    if len(call) > 2:
-                        display_call.append(hex(id(call[2]))) # parent
-                    static_display_calls.append(display_call)
-                
-                results = {}
-                results['display'] = json.dumps(static_display_calls)
 
-                if len(capture_values) > 0:
-                    # Save the id's of the widget models that need to be monitored
-                    results['controllers'] = []
-                    for input_widget in capture_values.keys():
-                        results['controllers'].append(hex(id(input_widget))) 
-                        
-                    results['frames'] = json.dumps(self._each_value(capture_values, capture_widgets))
-                else:
-                    this_widget_capture = {}
-                    for capture_widget in capture_widgets:
-                        this_widget_capture[hex(id(capture_widget))] = self._get_state(capture_widget)
-                    results['frames'] = json.dumps([{'states': this_widget_capture}])
+                # Brute force all combinations.
+                frames = self._each_value(self.capture_values)
 
-                capture_widgets[0].set_snapshot(results)
-                
+                # Restore clear output
                 self._ipython.display_pub.clear_output = original_clear_output
                 del self._captured_io
 
-            # Revert widgets back to their initial values
-            for (widget, value) in original_values.items():
-                widget.value = value
+            # Clean-up.  Remove hooks.
+            for widget in self.capture_widgets:
+                self._unhook_send(widget)
 
+            # Commit the capture results to the notebook.
+            results = {
+                'initial': initial_messages
+            }
+            self.capture_widgets[0].set_snapshot(json.dumps(results))
+
+    def _each_value(self, widget_values, set_values=None):
+        (widget, values) = widget_values.popitem()
+        results = []
+        for value in values:
+            widget.value = value
+            
+            if len(widget_values) > 0:
+                copied_widget_values = dict(widget_values)
+                results.extend(self._each_value(copied_widget_values, capture_widgets))
+            else:
+                
+                this_widget_capture = {}
+                for capture_widget in capture_widgets:
+                    this_widget_capture[hex(id(capture_widget))] = self._get_state(capture_widget)
+                
+                capture = {}
+                capture['states'] = this_widget_capture
+                
+                capture['sends'] = self.sent_msgs
+                self.sent_msgs = []
+                capture['stdout'] = self._captured_io.stdout
+                capture['stderr'] = self._captured_io.stderr
+                
+                results.append(capture)
+        return results
+    
 
     def _get_bounded_values(self, widget, view_name):
         if isinstance(widget, widgets.IntRangeWidget) and \
@@ -181,51 +190,15 @@ class StaticWidgetManager(object):
             return None
     
 
-    def _each_value(self, widget_values, capture_widgets):
-        (widget, values) = widget_values.popitem()
-        results = []
-        for value in values:
-            
-            widget.value = value
-            
-            if len(widget_values) > 0:
-                copied_widget_values = dict(widget_values)
-                results.extend(self._each_value(copied_widget_values, capture_widgets))
-            else:
-                
-                this_widget_capture = {}
-                for capture_widget in capture_widgets:
-                    this_widget_capture[hex(id(capture_widget))] = self._get_state(capture_widget)
-                
-                capture = {}
-                capture['states'] = this_widget_capture
-                capture['sends'] = self._sent_messages
-                self._sent_messages = {}
-                capture['stdout'] = self._captured_io.stdout
-                capture['stderr'] = self._captured_io.stderr
-                
-                results.append(capture)
-        return results
-    
-
     def _hook_send(self, widget):
-        original_send = widget.send
+        widget.original_send = widget._send
         def handle_send(msg):
-            original_send(msg)
-            if not hex(id(widget)) in sent_messages:
-                self._sent_messages[hex(id(widget))] = []
-            self._sent_messages[hex(id(widget))].append(msg)
-        widget.send = handle_send
+            widget.original_send(msg)
+            self.sent_msgs.append((hex(id(widget)), msg)
+        widget._send = handle_send
 
+    def _unhook_send(self, widget):
+        widget._send = widget.original_send
         
-    def _get_state(self, widget):
-        state = {}
-        for name in widget.keys:
-            state[name] = copy.deepcopy(getattr(widget, name))
-        return state
-    
-    
-    def _handle_cell_executed(self):
-        widgets.Widget.display_calls = []
 
 static_widgetmanager = StaticWidgetManager()
