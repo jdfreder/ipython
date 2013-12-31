@@ -154,24 +154,24 @@ class StaticWidgetManager(object):
         results = []
         for value in values:
             widget.value = value
-            
+
+            current_set_values = {}
+            if set_values is not None:
+                current_set_values.update(set_values)
+            current_set_values[hex(id(capture_widget))] = value
+
             if len(widget_values) > 0:
                 copied_widget_values = dict(widget_values)
-                results.extend(self._each_value(copied_widget_values, capture_widgets))
+                results.extend(self._each_value(copied_widget_values, current_set_values))
             else:
-                
-                this_widget_capture = {}
-                for capture_widget in capture_widgets:
-                    this_widget_capture[hex(id(capture_widget))] = self._get_state(capture_widget)
-                
+
                 capture = {}
-                capture['states'] = this_widget_capture
-                
-                capture['sends'] = self.sent_msgs
-                self.sent_msgs = []
+                capture['values'] = current_set_values
                 capture['stdout'] = self._captured_io.stdout
                 capture['stderr'] = self._captured_io.stderr
-                
+                capture['sends'] = self.sent_msgs
+                self.sent_msgs = []
+
                 results.append(capture)
         return results
     
