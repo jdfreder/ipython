@@ -46,9 +46,9 @@ function(widget_manager, underscore, backbone){
         },
     
 
-        send: function (content, cell) {
+        send: function (content, view) {
             if (this._has_comm()) {
-                var callbacks = this._make_callbacks();
+                var callbacks = this._make_callbacks(view);
                 var data = {method: 'custom', custom_content: content};
                 
                 this.comm.send(data, callbacks);
@@ -311,18 +311,24 @@ function(widget_manager, underscore, backbone){
 
 
         // Build a callback dict.
-        _make_callbacks: function () {
+        _make_callbacks: function (view) {
             var callbacks = {};
 
-            // Used the last modified view as the sender of the message.  This
-            // will insure that any python code triggered by the sent message
-            // can create and display widgets and output.
+            // If a view was passed in, direct the output to the cell that
+            // corresponds to that view.
             var cell = null;
-            if (this.last_modified_view !== undefined && 
-                this.last_modified_view.cell !== undefined) {
-                cell = this.last_modified_view.cell;
+            if (view !== undefined) {
+                cell = view.cell;
+            } else {
+                // Use the last modified view as the sender of the message.  This
+                // will insure that any python code triggered by the sent message
+                // can create and display widgets and output.
+                if (this.last_modified_view !== undefined && 
+                    this.last_modified_view.cell !== undefined) {
+                    cell = this.last_modified_view.cell;
+                }    
             }
-
+            
             if (cell !== null) {
                 
                 // Try to get output handlers
@@ -423,7 +429,7 @@ function(widget_manager, underscore, backbone){
     
     
         send: function (content) {
-            this.model.send(content, this.cell);
+            this.model.send(content, this);
         },
 
 
