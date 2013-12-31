@@ -56,11 +56,6 @@ function(widget_manager, underscore, backbone){
         },
 
 
-        _handle_custom_msg: function (content) {
-            this.trigger('msg', content);
-        },
-
-
         // Handle when a widget is closed.
         _handle_comm_closed: function (msg) {
             this._execute_views_method('remove');
@@ -99,7 +94,7 @@ function(widget_manager, underscore, backbone){
                     cell.metadata.snapshot = msg.content.data.snapshot;
                     break;
                 case 'custom':
-                    this._handle_custom_msg(msg.content.data.custom_content);
+                    this.trigger('msg', msg.content.data.custom_content);
                     break;
             }
         },
@@ -206,11 +201,6 @@ function(widget_manager, underscore, backbone){
         },
 
 
-        _handle_view_created: function (view) {
-            this.trigger('view_created', view);
-        },
-
-
         _execute_views_method: function (/* method_name, [argument0], [argument1], [...] */) {
             var method_name = arguments[0];
             var args = null;
@@ -256,7 +246,7 @@ function(widget_manager, underscore, backbone){
                                         new_views.push(view);
                                         parent_view.display_child(view);
                                         displayed = true;
-                                        this._handle_view_created(view);
+                                        this.trigger('view_created', view);
                                     }
                                 }    
                             }
@@ -274,7 +264,7 @@ function(widget_manager, underscore, backbone){
                         if (cell.widget_subarea !== undefined && cell.widget_subarea !== null) {
                             cell.widget_area.show();
                             cell.widget_subarea.append(view.$el);
-                            this._handle_view_created(view);
+                            this.trigger('view_created', view);
                         }
                     }
                 }
