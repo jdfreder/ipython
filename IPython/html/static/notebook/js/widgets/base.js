@@ -30,7 +30,6 @@ function(widget_manager, underscore, backbone){
             this.msg_buffer = null;
             this.views = [];
             this.id = widget_id;
-            this._custom_msg_callbacks = [];
 
             if (comm !== undefined) {
 
@@ -62,33 +61,8 @@ function(widget_manager, underscore, backbone){
         },
 
 
-        on_msg: function (callback, remove) {
-            if (remove) {
-                var found_index = -1;
-                for (var index in this._custom_msg_callbacks) {
-                    if (callback === this._custom_msg_callbacks[index]) {
-                        found_index = index;
-                        break;
-                    }
-                }
-
-                if (found_index >= 0) {
-                    this._custom_msg_callbacks.splice(found_index, 1);
-                }
-            } else {
-                this._custom_msg_callbacks.push(callback);
-            }
-        },
-
-
         _handle_custom_msg: function (content) {
-            for (var index in this._custom_msg_callbacks) {
-                try {
-                    this._custom_msg_callbacks[index](content);
-                } catch (e) {
-                    console.log("Exception in widget model msg callback", e, content);
-                }
-            }
+            this.trigger('msg', content);
         },
 
 
