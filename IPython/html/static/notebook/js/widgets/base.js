@@ -89,9 +89,9 @@ function(widget_manager, underscore, backbone){
                     var class_list = msg.content.data.class_list;
                     this._execute_views_method(method, selector, class_list);
                     break;
-                case 'set_snapshot':
+                case 'set_widget_cache':
                     var cell = this._get_msg_cell(msg.parent_header.msg_id);
-                    cell.metadata.snapshot = msg.content.data.snapshot;
+                    cell.metadata.cache = msg.content.data.cache;
                     break;
                 case 'custom':
                     this.trigger('msg', msg.content.data.custom_content);

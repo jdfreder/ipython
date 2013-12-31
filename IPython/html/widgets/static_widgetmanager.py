@@ -145,8 +145,9 @@ class StaticWidgetManager(object):
             # Commit the capture results to the notebook.
             results = {
                 'initial': initial_messages
+                'frames': frames
             }
-            self.capture_widgets[0].set_snapshot(json.dumps(results))
+            self.capture_widgets[0].set_widget_cache(json.dumps(results))
 
     def _each_value(self, widget_values, set_values=None):
         (widget, values) = widget_values.popitem()

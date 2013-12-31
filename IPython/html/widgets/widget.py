@@ -343,17 +343,17 @@ class Widget(LoggingConfigurable):
                         "custom_content": content})
 
 
-    def set_snapshot(self, snapshot):
+    def set_widget_cache(self, cache):
         """Sets the static pre-computed widget data for the currently executing
         cell.
 
         Parameters
         ----------
-        snapshot : dict
-            Precomputed widget state snapshot.
+        cache : dict
+            Precomputed widget information.
         """
-        self._send({"method": "set_snapshot",
-                        "snapshot": snapshot})
+        self._send({"method": "set_widget_cache",
+            "cache": snapshot})
 
 
     def on_msg(self, callback, remove=False):
