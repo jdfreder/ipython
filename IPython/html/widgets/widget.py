@@ -1,13 +1,8 @@
 """Base Widget class.  Allows user to create widgets in the back-end that render
 in the IPython notebook front-end.
 """
-#-----------------------------------------------------------------------------
-# Copyright (c) 2013, the IPython Development Team.
-#
+# Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
-#
-# The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
 
 #-----------------------------------------------------------------------------
 # Imports
@@ -131,7 +126,6 @@ class Widget(LoggingConfigurable):
     #-------------------------------------------------------------------------
     # Properties
     #-------------------------------------------------------------------------
-
     @property
     def comm(self):
         """Gets the Comm associated with this widget.
@@ -235,6 +229,22 @@ class Widget(LoggingConfigurable):
         remove: bool
             True if the callback should be unregistered."""
         self._display_callbacks.register_callback(callback, remove=remove)
+
+    def get_state_count(self):
+        """Get the number of states that this widget can be in.
+
+        This is used when one needs to know how many iterations run_states will
+        make."""
+        return 1
+    
+    def run_states(self, callback):
+        """Iterate through each possible state of this widget.
+
+        Parameters
+        ----------
+        callback: callable
+            Callback to call for each state."""
+        callback()
 
     #-------------------------------------------------------------------------
     # Support methods

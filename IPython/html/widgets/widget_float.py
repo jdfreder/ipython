@@ -2,17 +2,13 @@
 
 Represents an unbounded float using a widget.
 """
-#-----------------------------------------------------------------------------
-# Copyright (c) 2013, the IPython Development Team.
-#
+# Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
-#
-# The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
 
 #-----------------------------------------------------------------------------
 # Imports
 #-----------------------------------------------------------------------------
+import math
 from .widget import DOMWidget
 from IPython.utils.traitlets import Unicode, CFloat, Bool, Enum
 
@@ -34,6 +30,27 @@ class _BoundedFloatWidget(_FloatWidget):
         """Constructor"""
         DOMWidget.__init__(self, *pargs, **kwargs)
         self.on_trait_change(self._validate, ['value', 'min', 'max'])
+
+    def get_state_count(self):
+        """Get the number of states that this widget can be in.
+
+        This is used when one needs to know how many iterations run_states will
+        make."""
+        return int(math.floor((self.max - self.min) / self.step))
+    
+    def run_states(self, callback):
+        """Iterate through each possible state of this widget.
+
+        Parameters
+        ----------
+        callback: callable
+            Callback to call for each state."""
+        original_value = self.value
+        count = self.get_state_count()
+        for i in range(count):
+            self.value = self.min + i * self.step
+            callback()
+        self.value = original_value
 
     def _validate(self, name, old, new):
         """Validate value, max, min."""

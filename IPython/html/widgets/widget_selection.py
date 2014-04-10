@@ -2,13 +2,8 @@
 
 Represents an enumeration using a widget.
 """
-#-----------------------------------------------------------------------------
-# Copyright (c) 2013, the IPython Development Team.
-#
+# Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
-#
-# The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
 
 #-----------------------------------------------------------------------------
 # Imports
@@ -64,6 +59,26 @@ class _SelectionWidget(DOMWidget):
             # the setting of self.values right now, before anything else runs
             self.values = kwargs.pop('values')
         DOMWidget.__init__(self, *args, **kwargs)
+
+    def get_state_count(self):
+        """Get the number of states that this widget can be in.
+
+        This is used when one needs to know how many iterations run_states will
+        make."""
+        return len(self.values)
+    
+    def run_states(self, callback):
+        """Iterate through each possible state of this widget.
+
+        Parameters
+        ----------
+        callback: callable
+            Callback to call for each state."""
+        original_value = self.value
+        for value in self.values.values():
+            self.value = value
+            callback()
+        self.value = original_value
     
     def _values_changed(self, name, old, new):
         """Handles when the values dict has been changed.
