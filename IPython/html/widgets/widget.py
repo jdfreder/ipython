@@ -83,10 +83,10 @@ class Widget(LoggingConfigurable):
         Widget._widget_construction_callback = callback
 
     @staticmethod
-    def _call_widget_constructed(widget):
+    def _call_widget_constructed(widget, **kwargs):
         """Static method, called when a widget is constructed."""
         if Widget._widget_construction_callback is not None and callable(Widget._widget_construction_callback):
-            Widget._widget_construction_callback(widget)
+            Widget._widget_construction_callback(widget, **kwargs)
 
     #-------------------------------------------------------------------------
     # Traits
@@ -115,9 +115,10 @@ class Widget(LoggingConfigurable):
     def __init__(self, **kwargs):
         """Public constructor"""
         super(Widget, self).__init__(**kwargs)
+        self.comm_send_callback = None        
 
         self.on_trait_change(self._handle_property_changed, self.keys)
-        Widget._call_widget_constructed(self)
+        Widget._call_widget_constructed(self, **kwargs)
 
     def __del__(self):
         """Object disposal"""
@@ -190,6 +191,19 @@ class Widget(LoggingConfigurable):
         """
         keys = self.keys if key is None else [key]
         return {k: self._pack_widgets(getattr(self, k)) for k in keys} 
+
+    def set_state(self, state):
+        """Sets the widget state, or a piece of it.
+
+        Parameters
+        ----------
+        state : dict
+            State dictionary recieved from the front-end or created by `get_state`."""
+        for name in self.keys:
+            if name in state:
+                value = self._unpack_widgets(state[name])
+                with self._lock_property(name, value):
+                    setattr(self, name, value)
 
     def send(self, content):
         """Sends a custom msg to the widget model in the front-end.
@@ -279,20 +293,12 @@ class Widget(LoggingConfigurable):
         # Handle backbone sync methods CREATE, PATCH, and UPDATE all in one.
         if method == 'backbone' and 'sync_data' in data:
             sync_data = data['sync_data']
-            self._handle_receive_state(sync_data) # handles all methods
+            self.set_state(sync_data) # handles all methods
 
         # Handle a custom msg from the front-end
         elif method == 'custom':
             if 'content' in data:
                 self._handle_custom_msg(data['content'])
-
-    def _handle_receive_state(self, sync_data):
-        """Called when a state is received from the front-end."""
-        for name in self.keys:
-            if name in sync_data:
-                value = self._unpack_widgets(sync_data[name])
-                with self._lock_property(name, value):
-                    setattr(self, name, value)
 
     def _handle_custom_msg(self, content):
         """Called when a custom msg is received."""
@@ -346,7 +352,9 @@ class Widget(LoggingConfigurable):
 
     def _send(self, msg):
         """Sends a message to the model in the front-end."""
-        self.comm.send(msg)
+        if self.comm_send_callback is None or \
+        (callable(self.comm_send_callback) and self.comm_send_callback(self, msg)):
+            self.comm.send(msg)
 
 
 class DOMWidget(Widget):

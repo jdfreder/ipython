@@ -1406,9 +1406,8 @@ var IPython = (function (IPython) {
 
 
     /**
-     * Once a session is started, link the code cells to the kernel and pass the 
-     * comm manager to the widget manager
-     *
+     * Once a session is started, link the code cells to the kernel and 
+     * instanciate an ActiveCellQuerier.
      */
     Notebook.prototype._session_started = function(){
         this.kernel = this.session.kernel;
@@ -1419,6 +1418,7 @@ var IPython = (function (IPython) {
                 cell.set_kernel(this.session.kernel);
             }
         }
+        this._active_cell_querier = new IPython.ActiveCellQuerier(this);
     };
     
     /**
