@@ -18,6 +18,7 @@ define([
     'notebook/js/celltoolbarpresets/default',
     'notebook/js/celltoolbarpresets/rawcell',
     'notebook/js/celltoolbarpresets/slideshow',
+    'notebook/js/scrollmanager'
 ], function (
     IPython, 
     $, 
@@ -34,7 +35,8 @@ define([
     tooltip,
     default_celltoolbar,
     rawcell_celltoolbar,
-    slideshow_celltoolbar
+    slideshow_celltoolbar,
+    scrollmanager
     ) {
 
     var Notebook = function (selector, options) {
@@ -63,6 +65,13 @@ define([
         this.tooltip = new tooltip.Tooltip(this.events);
         this.ws_url = options.ws_url;
         this._session_starting = false;
+
+        //  Create and register scroll managers.
+        this.scrollmanager = new scrollmanager.ScrollManager(this);
+        scrollmanager.ScrollSelector.register('Default', this.scrollmanager);
+        scrollmanager.ScrollSelector.register('Heading 1', new scrollmanager.HeadingScrollManager(this, 1));
+        scrollmanager.ScrollSelector.register('Slide', new scrollmanager.SlideScrollManager(this));
+        
         // default_kernel_name is a temporary measure while we implement proper
         // kernel selection and delayed start. Do not rely on it.
         this.default_kernel_name = 'python';
@@ -1596,7 +1605,7 @@ define([
         this._session_starting = false;
         utils.log_ajax_error(jqxhr, status, error);
     };
-
+    
     /**
      * Prompt the user to restart the IPython kernel.
      * 
@@ -2606,10 +2615,10 @@ define([
      * @method delete_checkpoint_error
      * @param {jqXHR} xhr jQuery Ajax object
      * @param {String} status Description of response status
-     * @param {String} error HTTP error message
+     * @param {String} error_msg HTTP error message
      */
-    Notebook.prototype.delete_checkpoint_error = function (xhr, status, error) {
-        this.events.trigger('checkpoint_delete_failed.Notebook', [xhr, status, error]);
+    Notebook.prototype.delete_checkpoint_error = function (xhr, status, error_msg) {
+        this.events.trigger('checkpoint_delete_failed.Notebook');
     };
 
 
