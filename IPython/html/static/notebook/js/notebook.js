@@ -66,11 +66,8 @@ define([
         this.ws_url = options.ws_url;
         this._session_starting = false;
 
-        //  Create and register scroll managers.
-        this.scrollmanager = new scrollmanager.ScrollManager(this);
-        scrollmanager.ScrollSelector.register('Default', this.scrollmanager);
-        scrollmanager.ScrollSelector.register('Heading 1', new scrollmanager.HeadingScrollManager(this, 1));
-        scrollmanager.ScrollSelector.register('Slideshow', new scrollmanager.SlideScrollManager(this));
+        //  Create default scroll manager.
+        this.scrollmanager = new scrollmanager.SlideScrollManager(this);
 
         // default_kernel_name is a temporary measure while we implement proper
         // kernel selection and delayed start. Do not rely on it.
