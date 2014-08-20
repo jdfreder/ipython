@@ -67,7 +67,7 @@ define([
         this._session_starting = false;
 
         //  Create default scroll manager.
-        this.scrollmanager = new scrollmanager.SlideScrollManager(this);
+        this.scroll_manager = new scrollmanager.SlideScrollManager(this);
 
         // default_kernel_name is a temporary measure while we implement proper
         // kernel selection and delayed start. Do not rely on it.
