@@ -361,6 +361,7 @@ div.cell {
   -webkit-box-sizing: border-box;
   border-width: thin;
   border-style: solid;
+  cursor: default;
   width: 100%;
   padding: 5px 5px 5px 0px;
   /* This acts as a spacer between cells, that is outside the border */
@@ -372,6 +373,15 @@ div.cell.selected {
 }
 div.cell.edit_mode {
   border-color: green;
+}
+div.cell.drag-source {
+  opacity: 0.3;
+}
+div.cell.drag-target-top {
+  border-top: 3px solid #0099ff;
+}
+div.cell.drag-target-bottom {
+  border-bottom: 3px solid #0099ff;
 }
 div.prompt {
   /* This needs to be wide enough for 3 digit prompt numbers: In[100]: */
