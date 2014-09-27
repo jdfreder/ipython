@@ -18,7 +18,8 @@ define([
     'notebook/js/celltoolbarpresets/default',
     'notebook/js/celltoolbarpresets/rawcell',
     'notebook/js/celltoolbarpresets/slideshow',
-    'notebook/js/scrollmanager'
+    'notebook/js/scrollmanager',
+    'notebook/js/mousemanager'
 ], function (
     IPython, 
     $, 
@@ -36,7 +37,8 @@ define([
     default_celltoolbar,
     rawcell_celltoolbar,
     slideshow_celltoolbar,
-    scrollmanager
+    scrollmanager,
+    mousemanager
     ) {
 
     var Notebook = function (selector, options) {
@@ -67,8 +69,9 @@ define([
         this._session_starting = false;
         this.default_cell_type = this.config.default_cell_type || 'code';
 
-        //  Create default scroll manager.
+        //  Create default scroll manager and mouse manager.
         this.scroll_manager = new scrollmanager.ScrollManager(this);
+        this.mouse_manager = new mousemanager.MouseManager({events: this.events, notebook: this});
 
         // default_kernel_name is a temporary measure while we implement proper
         // kernel selection and delayed start. Do not rely on it.

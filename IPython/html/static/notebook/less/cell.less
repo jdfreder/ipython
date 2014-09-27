@@ -5,6 +5,7 @@ div.cell {
     .border-box-sizing();
     border-width: thin;
     border-style: solid;
+    cursor: default;
 
     &.selected {
         border-color: @border_color;
@@ -12,6 +13,18 @@ div.cell {
 
     &.edit_mode {
         border-color: green;
+    }
+
+    &.drag-source {
+        opacity: 0.3;
+    }
+
+    &.drag-target-top {
+        border-top: 3px solid #0099ff;
+    }
+
+    &.drag-target-bottom {
+        border-bottom: 3px solid #0099ff;
     }
 
     width: 100%;
