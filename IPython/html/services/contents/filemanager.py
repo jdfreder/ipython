@@ -260,6 +260,27 @@ class FileContentsManager(ContentsManager):
             model['format'] = 'json'
         return model
 
+
+    def _template_model(self, name, path='', content=True):
+        """Build a notebook model
+
+        if content is requested, the notebook content will be populated
+        as a JSON structure (not double-serialized)
+        """
+        model = self._base_model(name, path)
+        model['type'] = 'template'
+        if content:
+            os_path = self._get_os_path(name, path)
+            with io.open(os_path, 'r', encoding='utf-8') as f:
+                try:
+                    nb = current.read(f, u'json')
+                except Exception as e:
+                    raise web.HTTPError(400, u"Unreadable Notebook: %s %s" % (os_path, e))
+            self.mark_trusted_cells(nb, name, path)
+            model['content'] = nb
+            model['format'] = 'json'
+        return model
+
     def get_model(self, name, path='', content=True):
         """ Takes a path and name for an entity and returns its model
 
@@ -286,6 +307,8 @@ class FileContentsManager(ContentsManager):
             model = self._dir_model(name, path, content)
         elif name.endswith('.ipynb'):
             model = self._notebook_model(name, path, content)
+        elif name.endswith('.tpl'):
+            model = self._template_model(name, path, content)
         else:
             model = self._file_model(name, path, content)
         return model

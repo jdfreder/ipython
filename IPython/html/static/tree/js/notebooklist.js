@@ -225,12 +225,14 @@ define([
     NotebookList.icons = {
         directory: 'folder_icon',
         notebook: 'notebook_icon',
+        template: 'fa fa-file-image-o',
         file: 'file_icon',
     };
 
     NotebookList.uri_prefixes = {
         directory: 'tree',
         notebook: 'notebooks',
+        template: 'templates',
         file: 'files',
     };
 
@@ -243,6 +245,7 @@ define([
         item.find(".item_name").text(name);
         var icon = NotebookList.icons[model.type];
         var uri_prefix = NotebookList.uri_prefixes[model.type];
+        console.log(model);
         item.find(".item_icon").addClass(icon).addClass('icon-fixed-width');
         var link = item.find("a.item_link")
             .attr('href',

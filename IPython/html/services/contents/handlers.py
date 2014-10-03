@@ -20,8 +20,9 @@ def sort_key(model):
     iname = model['name'].lower()
     type_key = {
         'directory' : '0',
-        'notebook'  : '1',
-        'file'      : '2',
+        'template'  : '1',
+        'notebook'  : '2',
+        'file'      : '3',
     }.get(model['type'], '9')
     return u'%s%s' % (type_key, iname)
 
@@ -46,7 +47,7 @@ class ContentsHandler(IPythonHandler):
     def _finish_model(self, model, location=True):
         """Finish a JSON request with a model, setting relevant headers, etc."""
         if location:
-            location = self.location_url(model['name'], model['path'])
+            location = self.location_url(model['name']+'.ipynb', model['path'])
             self.set_header('Location', location)
         self.set_header('Last-Modified', model['last_modified'])
         self.finish(json.dumps(model, default=date_default))
@@ -283,4 +284,5 @@ default_handlers = [
         ModifyCheckpointsHandler),
     (r"/api/contents%s" % file_path_regex, ContentsHandler),
     (r"/api/contents%s" % path_regex, ContentsHandler),
+    (r"/undefined/%s" % path_regex, ContentsHandler),
 ]
