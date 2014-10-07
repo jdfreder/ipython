@@ -1,13 +1,9 @@
 """Base Widget class.  Allows user to create widgets in the back-end that render
 in the IPython notebook front-end.
 """
-#-----------------------------------------------------------------------------
-# Copyright (c) 2013, the IPython Development Team.
-#
+
+# Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
-#
-# The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
 
 #-----------------------------------------------------------------------------
 # Imports
@@ -94,6 +90,12 @@ class Widget(LoggingConfigurable):
         """Static method, called when a widget is constructed."""
         if Widget._widget_construction_callback is not None and callable(Widget._widget_construction_callback):
             Widget._widget_construction_callback(widget)
+
+    @staticmethod
+    def _comm_opened(comm):
+        """Static method, called when a widget comm is constructed."""
+        # TODO.
+        pass
 
     #-------------------------------------------------------------------------
     # Traits

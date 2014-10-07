@@ -67,7 +67,7 @@ define([
         // even if null for V8 VM optimisation
         this.input_prompt_number = null;
         this.celltoolbar = null;
-        this.output_area = null;
+        this.output_widget = null;
         this.last_msg_id = null;
         this.completer = null;
 
@@ -111,6 +111,20 @@ define([
     CodeCell.msg_cells = {};
 
     CodeCell.prototype = new Cell();
+
+    /**
+     * @method get_output_area
+     */
+    CodeCell.prototype.get_output_area = function () {
+        // TODO
+    };
+
+    /**
+     * @method get_primary_output_area
+     */
+    CodeCell.prototype.get_primary_output_area = function () {
+        // TODO
+    };
 
     /**
      * @method auto_highlight
@@ -161,12 +175,10 @@ define([
         var output = $('<div></div>');
         cell.append(input).append(widget_area).append(output);
         this.element = cell;
-        this.output_area = new outputarea.OutputArea({
-            selector: output, 
-            prompt_area: true, 
-            events: this.events, 
-            keyboard_manager: this.keyboard_manager});
         this.completer = new completer.Completer(this, this.events);
+
+        // Create the output area widget.
+        // TODO
     };
 
     /** @method bind_events */
@@ -267,7 +279,7 @@ define([
      * @method execute
      */
     CodeCell.prototype.execute = function () {
-        this.output_area.clear_output();
+        this.get_output_area().clear_output();
         
         // Clear widget area
         this.widget_subarea.html('');
@@ -295,6 +307,7 @@ define([
      * @method get_callbacks
      */
     CodeCell.prototype.get_callbacks = function () {
+        var output_area = this.get_output_area();
         return {
             shell : {
                 reply : $.proxy(this._handle_execute_reply, this),
@@ -304,8 +317,8 @@ define([
                 }
             },
             iopub : {
-                output : $.proxy(this.output_area.handle_output, this.output_area),
-                clear_output : $.proxy(this.output_area.handle_clear_output, this.output_area),
+                output : $.proxy(output_area.handle_output, output_area),
+                clear_output : $.proxy(output_area.handle_clear_output, output_area),
             },
             input : $.proxy(this._handle_input_request, this)
         };
@@ -339,7 +352,7 @@ define([
      * @private
      */
     CodeCell.prototype._handle_input_request = function (msg) {
-        this.output_area.append_raw_input(msg);
+        this.get_output_area().append_raw_input(msg);
     };
 
 
@@ -376,28 +389,28 @@ define([
 
     CodeCell.prototype.collapse_output = function () {
         this.collapsed = true;
-        this.output_area.collapse();
+        this.get_output_area().collapse();
     };
 
 
     CodeCell.prototype.expand_output = function () {
         this.collapsed = false;
-        this.output_area.expand();
-        this.output_area.unscroll_area();
+        this.get_output_area().expand();
+        this.get_output_area().unscroll_area();
     };
 
     CodeCell.prototype.scroll_output = function () {
-        this.output_area.expand();
-        this.output_area.scroll_if_long();
+        this.get_output_area().expand();
+        this.get_output_area().scroll_if_long();
     };
 
     CodeCell.prototype.toggle_output = function () {
         this.collapsed = Boolean(1 - this.collapsed);
-        this.output_area.toggle_output();
+        this.get_output_area().toggle_output();
     };
 
     CodeCell.prototype.toggle_output_scroll = function () {
-        this.output_area.toggle_scroll();
+        this.get_output_area().toggle_scroll();
     };
 
 
@@ -450,7 +463,7 @@ define([
 
 
     CodeCell.prototype.clear_output = function (wait) {
-        this.output_area.clear_output(wait);
+        this.get_output_area().clear_output(wait);
         this.set_input_prompt();
     };
 
@@ -472,8 +485,12 @@ define([
             } else {
                 this.set_input_prompt();
             }
-            this.output_area.trusted = data.trusted || false;
-            this.output_area.fromJSON(data.outputs);
+            // TODO: When widget states are serialized, it makes sense to allow
+            // the outputs to be serialized as state of the output widget, and
+            // just remove the following lines regarding `output_area`.
+            var output_area = this.get_primary_output_area();
+            output_area.trusted = data.trusted || false;
+            output_area.fromJSON(data.outputs);
             if (data.collapsed !== undefined) {
                 if (data.collapsed) {
                     this.collapse_output();
@@ -492,10 +509,14 @@ define([
         if (isFinite(this.input_prompt_number)) {
             data.prompt_number = this.input_prompt_number;
         }
-        var outputs = this.output_area.toJSON();
+        // TODO: When widget states are serialized, it makes sense to allow
+        // the outputs to be serialized as state of the output widget, and
+        // just remove the following lines regarding `output_area`.
+        var output_area = this.get_primary_output_area();
+        var outputs = output_area().toJSON();
         data.outputs = outputs;
         data.language = 'python';
-        data.trusted = this.output_area.trusted;
+        data.trusted = output_area().trusted;
         data.collapsed = this.collapsed;
         return data;
     };

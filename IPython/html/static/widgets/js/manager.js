@@ -184,14 +184,19 @@ define([
 
     WidgetManager.prototype._handle_comm_open = function (comm, msg) {
         // Handle when a comm is opened.
+        return this.create_model(comm, msg.content.target_name);
+    };
+
+    WidgetManager.prototype.create_model = function (comm, target_name) {
+        // Create a widget model.
         var that = this;
         var model_id = comm.comm_id;
-        var widget_type_name = msg.content.target_name;
-        var widget_model = new WidgetManager._model_types[widget_type_name](this, model_id, comm);
+        var widget_model = new WidgetManager._model_types[target_name](this, model_id, comm);
         widget_model.on('comm:close', function () {
           delete that._models[model_id];
         });
         this._models[model_id] = widget_model;
+        return widget_model;
     };
 
     // Backwards compatability.

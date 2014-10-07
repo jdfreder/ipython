@@ -6,10 +6,12 @@ Represents a container that can be used to group other widgets.
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
 
+# Imports
 from .widget import DOMWidget
 from IPython.utils.traitlets import Unicode, Tuple, TraitError, Int, CaselessStrEnum
 from IPython.utils.warn import DeprecatedClass
 
+# Classes
 class Box(DOMWidget):
     """Displays multiple widgets in a group."""
     _view_name = Unicode('BoxView', sync=True)

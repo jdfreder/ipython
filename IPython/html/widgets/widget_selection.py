@@ -2,18 +2,11 @@
 
 Represents an enumeration using a widget.
 """
-#-----------------------------------------------------------------------------
-# Copyright (c) 2013, the IPython Development Team.
-#
+
+# Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
-#
-# The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
 
-#-----------------------------------------------------------------------------
 # Imports
-#-----------------------------------------------------------------------------
-
 from collections import OrderedDict
 from threading import Lock
 
@@ -22,9 +15,7 @@ from IPython.utils.traitlets import Unicode, List, Bool, Any, Dict, TraitError, 
 from IPython.utils.py3compat import unicode_type
 from IPython.utils.warn import DeprecatedClass
 
-#-----------------------------------------------------------------------------
 # SelectionWidget
-#-----------------------------------------------------------------------------
 class _Selection(DOMWidget):
     """Base class for Selection widgets
     

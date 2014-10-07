@@ -2,24 +2,16 @@
 
 Represents an unbounded int using a widget.
 """
-#-----------------------------------------------------------------------------
-# Copyright (c) 2013, the IPython Development Team.
-#
-# Distributed under the terms of the Modified BSD License.
-#
-# The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
 
-#-----------------------------------------------------------------------------
+# Copyright (c) IPython Development Team.
+# Distributed under the terms of the Modified BSD License.
+
 # Imports
-#-----------------------------------------------------------------------------
 from .widget import DOMWidget
 from IPython.utils.traitlets import Unicode, CInt, Bool, CaselessStrEnum, Tuple
 from IPython.utils.warn import DeprecatedClass
 
-#-----------------------------------------------------------------------------
 # Classes
-#-----------------------------------------------------------------------------
 class _Int(DOMWidget):
     """Base class used to create widgets that represent an int."""
     value = CInt(0, help="Int value", sync=True) 

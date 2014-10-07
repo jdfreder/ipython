@@ -3,24 +3,16 @@
 Represents a button in the frontend using a widget.  Allows user to listen for
 click events on the button and trigger backend code when the clicks are fired.
 """
-#-----------------------------------------------------------------------------
-# Copyright (c) 2013, the IPython Development Team.
-#
-# Distributed under the terms of the Modified BSD License.
-#
-# The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
 
-#-----------------------------------------------------------------------------
+# Copyright (c) IPython Development Team.
+# Distributed under the terms of the Modified BSD License.
+
 # Imports
-#-----------------------------------------------------------------------------
 from .widget import DOMWidget, CallbackDispatcher
 from IPython.utils.traitlets import Unicode, Bool, CaselessStrEnum
 from IPython.utils.warn import DeprecatedClass
 
-#-----------------------------------------------------------------------------
 # Classes
-#-----------------------------------------------------------------------------
 class Button(DOMWidget):
     """Button widget.
 

@@ -3,24 +3,16 @@
 Represents a multipage container that can be used to group other widgets into
 pages.
 """
-#-----------------------------------------------------------------------------
-# Copyright (c) 2013, the IPython Development Team.
-#
-# Distributed under the terms of the Modified BSD License.
-#
-# The full license is in the file COPYING.txt, distributed with this software.
-#-----------------------------------------------------------------------------
 
-#-----------------------------------------------------------------------------
+# Copyright (c) IPython Development Team.
+# Distributed under the terms of the Modified BSD License.
+
 # Imports
-#-----------------------------------------------------------------------------
 from .widget_box import Box
 from IPython.utils.traitlets import Unicode, Dict, CInt
 from IPython.utils.warn import DeprecatedClass
 
-#-----------------------------------------------------------------------------
 # Classes
-#-----------------------------------------------------------------------------
 class _SelectionContainer(Box):
     """Base class used to display multiple child widgets."""
     _titles = Dict(help="Titles of the pages", sync=True)
