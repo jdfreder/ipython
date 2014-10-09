@@ -176,7 +176,7 @@ define([
         return this.create_model({model_name: msg.content.data.target_name, comm: comm});
     };
 
-    WidgetManager.prototype.create_model = function (model_name, target_name) {
+    WidgetManager.prototype.create_model = function (model_name, target_name, init_state_callback) {
         // Create and return a new widget model.
         //
         // Parameters
@@ -185,7 +185,13 @@ define([
         //      Target name of the widget model to create.
         // target_name: string
         //      Target name of the widget in the back-end.
-        return this._create_model({model_name: model_name, target_name: target_name});
+        // init_state_callback: (optional) callback
+        //      Called when the first state push from the back-end is 
+        //      recieved.
+        return this._create_model({
+            model_name: model_name, 
+            target_name: target_name,
+            init_state_callback: init_state_callback});
     };
 
     WidgetManager.prototype._create_model = function (options) {
@@ -200,6 +206,9 @@ define([
         //      target_name: (optional) string
         //          Target name of the widget in the back-end.
         //      comm: (optional) Comm
+        //      init_state_callback: (optional) callback
+        //          Called when the first state push from the back-end is 
+        //          recieved.
 
         // Create a comm if it wasn't provided.
         var comm = options.comm;
@@ -210,8 +219,8 @@ define([
         // Create and return a new model that is connected to the comm.
         var that = this;
         var model_id = comm.comm_id;
-        var widget_type_name = msg.content.data.model_name;
-        var widget_model = new WidgetManager._model_types[widget_type_name](this, model_id, comm);
+        var model_type = WidgetManager._model_types[options.model_name];
+        var widget_model = new model_type(this, model_id, comm, options.init_state_callback);
         widget_model.on('comm:close', function () {
           delete that._models[model_id];
         });
