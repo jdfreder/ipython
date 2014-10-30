@@ -562,7 +562,34 @@ define([
             ], callback, errback
         );
     };
-    
+
+    var try_load = function(class_name, module_name, registry) {
+        // Tries to load a class
+        //
+        // Tries to load a class from a module using require.js, if a module 
+        // is specified, otherwise tries to load a class from the global 
+        // registry, if the global registry is provided.
+        return new Promise(function(resolve, reject) {
+
+            // Try loading the view module using require.js
+            if (module_name) {
+                require([module_name], function(module) {
+                    if (module[class_name] === undefined) {
+                        reject(Error('Class not found in module.'));
+                    } else {
+                        resolve(module[class_name]);
+                    }
+                }, reject);
+            } else {
+                if (registry && registry[class_name]) {
+                    resolve(registry[class_name]);
+                } else {
+                    reject(Error('Class not found in registry.'));
+                }
+            }
+        });
+    };
+
     var utils = {
         regex_split : regex_split,
         uuid : uuid,
@@ -588,6 +615,7 @@ define([
         ajax_error_msg : ajax_error_msg,
         log_ajax_error : log_ajax_error,
         requireCodeMirrorMode : requireCodeMirrorMode,
+        try_load: try_load,
     };
 
     // Backwards compatability.
