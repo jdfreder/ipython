@@ -590,6 +590,21 @@ define([
         });
     };
 
+    var resolve_dict = function(d) {
+        var keys = Object.keys(d);
+        var values = [];
+        keys.forEach(function(key) {
+            values.push(key);
+        });
+        return Promise.all(values).then(function(v) {
+            d = {};
+            for(var i=0; i<keys.length; i++) {
+                d[keys[i]] = v[i];
+            }
+            return d;
+        });
+    };
+
     var utils = {
         regex_split : regex_split,
         uuid : uuid,
@@ -616,6 +631,7 @@ define([
         log_ajax_error : log_ajax_error,
         requireCodeMirrorMode : requireCodeMirrorMode,
         load: load,
+        resolve_dict: resolve_dict,
     };
 
     // Backwards compatability.
