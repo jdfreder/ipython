@@ -575,7 +575,8 @@ define([
             if (module_name) {
                 require([module_name], function(module) {
                     if (module[class_name] === undefined) {
-                        reject(new Error('Class not found in module.'));
+                        console.error('Class '+class_name+' not found in module '+module_name)
+                        reject();
                     } else {
                         resolve(module[class_name]);
                     }
@@ -584,7 +585,8 @@ define([
                 if (registry && registry[class_name]) {
                     resolve(registry[class_name]);
                 } else {
-                    reject(new Error('Class not found in registry.'));
+                    console.error('Class '+class_name+' not found in registry ', registry);
+                    reject();
                 }
             }
         });
