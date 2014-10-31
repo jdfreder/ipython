@@ -563,7 +563,7 @@ define([
         );
     };
 
-    var try_load = function(class_name, module_name, registry) {
+    var load = function(class_name, module_name, registry) {
         // Tries to load a class
         //
         // Tries to load a class from a module using require.js, if a module 
@@ -575,7 +575,7 @@ define([
             if (module_name) {
                 require([module_name], function(module) {
                     if (module[class_name] === undefined) {
-                        reject(Error('Class not found in module.'));
+                        reject(new Error('Class not found in module.'));
                     } else {
                         resolve(module[class_name]);
                     }
@@ -584,7 +584,7 @@ define([
                 if (registry && registry[class_name]) {
                     resolve(registry[class_name]);
                 } else {
-                    reject(Error('Class not found in registry.'));
+                    reject(new Error('Class not found in registry.'));
                 }
             }
         });
@@ -615,7 +615,7 @@ define([
         ajax_error_msg : ajax_error_msg,
         log_ajax_error : log_ajax_error,
         requireCodeMirrorMode : requireCodeMirrorMode,
-        try_load: try_load,
+        load: load,
     };
 
     // Backwards compatability.
