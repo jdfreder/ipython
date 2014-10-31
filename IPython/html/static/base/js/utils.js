@@ -596,7 +596,7 @@ define([
         var keys = Object.keys(d);
         var values = [];
         keys.forEach(function(key) {
-            values.push(key);
+            values.push(d[key]);
         });
         return Promise.all(values).then(function(v) {
             d = {};
