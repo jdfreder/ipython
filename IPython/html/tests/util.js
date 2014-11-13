@@ -195,15 +195,17 @@ casper.wait_for_widget = function (widget_info) {
     this.waitFor(function () {
         var pending = this.evaluate(function (model_id) {
 
-            // Get the model.  Once the model is had, store it's pending_msgs
-            // count in the window's dictionary.
-            IPython.notebook.kernel.widget_manager.get_model(model_id)
-            .then(function(model) {     
-                window.pending_msgs[model_id] = model.pending_msgs; 
-            });
+            // // Get the model.  Once the model is had, store it's pending_msgs
+            // // count in the window's dictionary.
+            // IPython.notebook.kernel.widget_manager.get_model(model_id)
+            // .then(function(model) {     
+            //     window.pending_msgs[model_id] = model.pending_msgs; 
+            // });
 
-            // Return the pending_msgs result.
-            return window.pending_msgs[model_id];
+            // // Return the pending_msgs result.
+            // return window.pending_msgs[model_id];
+
+            return IPython.notebook.kernel.widget_manager.get_model(model_id).pending_msgs;
         }, {model_id: widget_info.model_id});
 
         if (pending === 0) {
