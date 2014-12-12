@@ -16,9 +16,15 @@ from .serialize import serialize_object, unpack_apply_message
 from .zmqshell import ZMQInteractiveShell
 
 
-def lazy_import_handle_comm_opened(*args, **kwargs):
+def lazy_widget_comm(*args, **kwargs):
+    """Loads widget namespace and registers the widget comm handler."""
     from IPython.html.widgets import Widget
     Widget.handle_comm_opened(*args, **kwargs)
+
+def lazy_widget_persistence_comm(*args, **kwargs):
+    """Loads widget namespace and registers the widget persistence comm handler."""
+    from IPython.html.widgets import Widget
+    Widget.handle_persistence_comm_opened(*args, **kwargs)
 
 
 class IPythonKernel(KernelBase):
@@ -64,7 +70,8 @@ class IPythonKernel(KernelBase):
 
         self.comm_manager = CommManager(shell=self.shell, parent=self, 
                                         kernel=self)
-        self.comm_manager.register_target('ipython.widget', lazy_import_handle_comm_opened)
+        self.comm_manager.register_target('ipython.widget', lazy_widget_comm)
+        self.comm_manager.register_target('ipython.widget.persistence', lazy_widget_persistence_comm)
 
         self.shell.configurables.append(self.comm_manager)
         comm_msg_types = [ 'comm_open', 'comm_msg', 'comm_close' ]

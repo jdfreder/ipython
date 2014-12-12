@@ -95,6 +95,7 @@ class Widget(LoggingConfigurable):
     _widget_construction_callback = None
     widgets = {}
     widget_types = {}
+    widget_state = {}
 
     @staticmethod
     def on_widget_constructed(callback):
@@ -116,6 +117,15 @@ class Widget(LoggingConfigurable):
         widget_class = import_item(msg['content']['data']['widget_class'])
         widget = widget_class(comm=comm)
 
+    @staticmethod
+    def handle_persistence_comm_opened(comm, msg):
+        """Static method, called when a widget persistence comm is connected."""
+        def handle_msg(msg):
+            if msg['content']['data'][0] == 'set':
+                Widget.widget_state = msg['content']['data'][1]
+            else:
+                comm.send(Widget.widget_state)
+        comm.on_msg(handle_msg)
 
     #-------------------------------------------------------------------------
     # Traits

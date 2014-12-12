@@ -48,6 +48,9 @@ define([
                 }).catch(utils.reject('Could not call widget save state callback.', true));
             }
         });
+
+        // Initialize persistence.
+        this._init_persistence();
     };
 
     //--------------------------------------------------------------------
@@ -101,13 +104,6 @@ define([
             }
         });
     };
-
-    // Use local storage to persist widgets across page refresh by default.
-    WidgetManager.set_state_callbacks(function() {
-        return JSON.parse(localStorage.widgets || '{}');
-    }, function(state) {
-        localStorage.widgets = JSON.stringify(state);
-    });
 
     //--------------------------------------------------------------------
     // Instance level
@@ -329,6 +325,40 @@ define([
             });
         this._models[model_id] = model_promise;
         return model_promise;
+    };
+
+    /**
+     * Initialize the widget persistence model.
+     *
+     * Widgets are persisted to the server's memory.
+     */
+    WidgetManager.prototype._init_persistence = function() {
+        var that = this;
+        this._get_connected_kernel().then(function(kernel) {
+            var comm = kernel.comm_manager.new_comm('ipython.widget.persistence');
+
+            // Listen for messages.  If a message arrives, try resolving
+            // the promise for that message's parent id.
+            var resolutions = {};
+            var handle_comm_msg = function(msg) {
+                if (resolutions[msg.parent_header.msg_id]) {
+                    resolutions[msg.parent_header.msg_id].call(undefined, msg.content.data);
+                    delete resolutions[msg.parent_header.msg_id];
+                }
+            };
+            comm.on_msg(handle_comm_msg);
+
+            // Set the state callbacks.
+            WidgetManager.set_state_callbacks(function() {
+                var msgid = comm.send(['get'], that.callbacks());
+                var promise = new Promise(function(resolve) {
+                    resolutions[msgid] = resolve;
+                });
+                return promise;
+            }, function(state) {
+                comm.send(['set', state], that.callbacks());
+            });
+        });
     };
 
     WidgetManager.prototype.get_state = function(options) {
