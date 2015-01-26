@@ -41,6 +41,9 @@ class _BoundedInt(_Int):
     def __init__(self, *pargs, **kwargs):
         """Constructor"""
         super(_BoundedInt, self).__init__(*pargs, **kwargs)
+        self._validate_value('value', None, self.value)
+        self._handle_min_changed('min', None, self.value)
+        self._handle_max_changed('max', None, self.value)
         self.on_trait_change(self._validate_value, ['value'])
         self.on_trait_change(self._handle_max_changed, ['max'])
         self.on_trait_change(self._handle_min_changed, ['min'])
@@ -54,11 +57,15 @@ class _BoundedInt(_Int):
         """Make sure the min is always <= the max."""
         if new < self.min:
             raise ValueError("setting max < min")
+        if new < self.value:
+            self.value = new
 
     def _handle_min_changed(self, name, old, new):
         """Make sure the max is always >= the min."""
         if new > self.max:
             raise ValueError("setting min > max")
+        if new > self.value:
+            self.value = new
 
 @register('IPython.IntText')
 class IntText(_Int):
