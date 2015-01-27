@@ -39,8 +39,8 @@ class _BoundedFloat(_Float):
         """Constructor"""
         super(_BoundedFloat, self).__init__(*pargs, **kwargs)
         self._value_changed('value', None, self.value)
-        self._min_changed('min', None, self.value)
-        self._max_changed('max', None, self.value)
+        self._min_changed('min', None, self.min)
+        self._max_changed('max', None, self.max)
 
     def _value_changed(self, name, old, new):
         """Validate value."""
